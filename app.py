@@ -2,40 +2,37 @@ import os
 import uuid
 import sqlite3
 import pandas as pd
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, send_from_directory
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
-from flask import send_from_directory
 
-@app.route('/static/uploads/<filename>')
-def uploaded_file(filename):
-    # This specifically looks inside your Volume for the image
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
+# 1. Create the App FIRST
 app = Flask(__name__)
 app.secret_key = 'AADU_cinema_ultra_secure_2026'
-# Admin session securely expires if inactive for 30 minutes
 app.permanent_session_lifetime = timedelta(minutes=30)
 
-# --- FOLDER & DATABASE CONFIGURATION ---
-# We check if we are on Railway (which uses /app) or your Laptop
+# 2. Configure Paths
 if os.path.exists('/app'):
-    # This is for the live Railway server with your Volume
     DATA_DIR = '/app/data'
 else:
-    # This is for your local laptop testing
     DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Ensure the folders exist so the app doesn't crash
 UPLOAD_FOLDER = os.path.join(DATA_DIR, 'static', 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Final Paths
 DB_FILE = os.path.join(DATA_DIR, 'booking_data.db')
 EXCEL_FILE = os.path.join(DATA_DIR, 'orders.xlsx')
 
+# 3. Set Config AFTER creating app
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# 4. NOW define the route that uses app.config
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+# --- REST OF YOUR CODE (ADMIN_USER, init_db, etc.) ---
 
 ADMIN_USER = "adhil"
 ADMIN_PASS = "Adhilp1024@ad"
