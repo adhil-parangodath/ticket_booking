@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Console | AADU CINEMAS</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    
+    <style>
+        #editSeatGrid .seat { width: 30px; height: 30px; font-size: 10px; margin: 2px; }
+        .seat.current-seat { border: 2px dashed var(--primary); background: var(--primary-light); color: var(--primary); }
+    </style>
+</head>
+<body class="bg-light">
+
+    <<nav class="navbar bg-white border-bottom shadow-sm mb-4 py-3 sticky-top">
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            <span class="fw-bold fs-5 text-dark">
+                <i class="fa-solid fa-shield-halved text-primary me-2"></i>AADU <span class="text-primary">ADMIN</span>
+            </span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="small fw-bold text-muted d-none d-md-inline">
+                    <i class="fa-solid fa-circle text-success me-1" style="font-size: 10px;"></i> Live
+                </span>
+                
+                <a href="/admin/download-excel" class="btn btn-outline-success btn-sm px-3 fw-bold rounded-pill shadow-sm">
+                    <i class="fa-solid fa-file-excel me-1"></i> Export Data
+                </a>
+                
+                <a href="/admin/quick-ticket" class="btn btn-warning btn-sm px-3 fw-bold rounded-pill shadow-sm text-dark">
+                    <i class="fa-solid fa-bolt me-1"></i> Box Office
+                </a>
+                <button class="btn btn-outline-primary btn-sm px-3 fw-bold rounded-pill" onclick="loadAdminData()">
+                    <i class="fa-solid fa-rotate me-1"></i> Sync
+                </button>
+                <a href="/admin/logout" class="btn btn-outline-danger btn-sm px-3 fw-bold rounded-pill">
+                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 mb-5">
+        
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="text-muted small fw-bold mb-1"><i class="fa-solid fa-ticket me-2"></i>TOTAL BOOKINGS</div>
+                    <h3 class="fw-bold m-0" id="stat-total">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card border-warning border-opacity-50">
+                    <div class="text-muted small fw-bold mb-1"><i class="fa-solid fa-clock text-warning me-2"></i>PENDING REVIEW</div>
+                    <h3 class="fw-bold m-0 text-warning" id="stat-pending">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card border-success border-opacity-50">
+                    <div class="text-muted small fw-bold mb-1"><i class="fa-solid fa-indian-rupee-sign text-success me-2"></i>VERIFIED REVENUE</div>
+                    <h3 class="fw-bold m-0 text-success" id="stat-revenue">₹0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card border-primary border-opacity-50">
+                    <div class="text-muted small fw-bold mb-1"><i class="fa-solid fa-chair text-primary me-2"></i>SEATS FILLED</div>
+                    <h3 class="fw-bold m-0 text-primary" id="stat-seats">0 / 40</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel p-0 overflow-hidden">
+            <div class="p-4 border-bottom bg-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <h6 class="m-0 fw-bold">Transaction Logs</h6>
+                <div class="input-group input-group-sm" style="max-width: 300px;">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" id="adminSearch" class="form-control border-start-0 bg-light" placeholder="Search customer or ID..." onkeyup="filterTable()">
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0" id="bookingsTable">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">TICKET ID</th>
+                            <th>CUSTOMER</th>
+                            <th>SEAT</th>
+                            <th>AMOUNT</th>
+                            <th>PROOF</th>
+                            <th>STATUS</th>
+                            <th class="text-end pe-4">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody">
+                        <tr><td colspan="7" class="text-center py-5 text-muted"><div class="spinner-border text-primary mb-3"></div><p>Loading secure data...</p></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h6 class="modal-title fw-bold">Payment Verification</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <img src="" id="modalImg" class="img-fluid rounded border shadow-sm" alt="Payment Screenshot">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="manageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 pb-2">
+                    <h6 class="modal-title fw-bold"><i class="fa-solid fa-gear text-dark me-2"></i>Manage Booking</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4 pt-0">
+                    <p class="small text-muted mb-4">Choose an action for this record.</p>
+                    <button class="btn btn-primary w-100 mb-3 py-3 fw-bold shadow-sm" onclick="startVisualEdit()">
+                        <i class="fa-solid fa-chair me-2"></i> Edit Seat Number
+                    </button>
+                    <button class="btn btn-outline-danger w-100 py-3 fw-bold shadow-sm" onclick="confirmDelete()">
+                        <i class="fa-solid fa-trash me-2"></i> Delete Permanently
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editSeatModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0">
+                    <h6 class="modal-title fw-bold"><i class="fa-solid fa-chair text-primary me-2"></i>Change Seat Assignment</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-0 text-center">
+                    <div class="seat-map-container bg-white border p-3 mt-2 shadow-sm rounded">
+                        <div class="screen-area mb-4"></div>
+                        <div id="editSeatGrid" class="text-center"></div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-3 mt-3 mb-4 flex-wrap small fw-bold text-muted">
+                        <div class="d-flex align-items-center"><div class="seat available me-1" style="width:14px;height:14px;margin:0;"></div> Open</div>
+                        <div class="d-flex align-items-center"><div class="seat current-seat me-1" style="width:14px;height:14px;margin:0;"></div> Current</div>
+                        <div class="d-flex align-items-center"><div class="seat selected me-1" style="width:14px;height:14px;margin:0;"></div> New</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded border">
+                        <span class="small fw-bold text-muted">Selected Seat:</span>
+                        <span id="newSeatDisplay" class="fs-5 fw-bold text-primary">--</span>
+                    </div>
+
+                    <button id="saveSeatBtn" class="btn btn-primary w-100 mt-3 fw-bold shadow-sm" onclick="submitSeatEdit()" disabled>
+                        Confirm Change
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="position: absolute; left: -9999px; top: -9999px;">
+        <div id="admin-ticket-render-area" class="mx-auto text-start" style="width: 450px; background: white; padding: 2rem; border: 1px solid #e2e8f0; border-radius: 12px; border-top: 8px solid #4f46e5; position: relative; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+            <div id="admin-ticket-stamp" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%) rotate(-15deg); border: 3px solid #f59e0b; color: #f59e0b; padding: 8px 16px; font-weight: 800; text-transform: uppercase; font-size: 1.5rem; letter-spacing: 2px; opacity: 0.15;">PENDING</div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span style="background-color: #4f46e5; color: white; padding: 8px 16px; border-radius: 50px; font-weight: bold; font-size: 0.85rem;">AADU CINEMAS</span>
+                <span id="admin-display-tno" style="font-weight: bold; color: #64748b; font-size: 0.85rem;"></span>
+            </div>
+            
+            <h3 style="font-weight: bold; color: #1e293b; margin: 0 0 5px 0; font-size: 1.5rem;">The Digital Frontier</h3>
+            <p style="color: #64748b; font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; margin-top: 0;">Hall 03 • Today • 07:00 PM</p>
+            
+            <div style="display: flex; margin-top: 1rem;">
+                <div style="flex: 0 0 50%; width: 50%;">
+                    <small style="color: #64748b; font-weight: bold; font-size: 10px; display: block; margin-bottom: 2px;">GUEST NAME</small>
+                    <span id="admin-display-name" style="font-weight: bold; font-size: 1.25rem; text-transform: uppercase; color: #1e293b;"></span>
+                </div>
+                <div style="flex: 0 0 25%; width: 25%;">
+                    <small style="color: #64748b; font-weight: bold; font-size: 10px; display: block; margin-bottom: 2px;">SEAT</small>
+                    <span id="admin-display-seat" style="font-weight: bold; font-size: 1.25rem; color: #4f46e5;"></span>
+                </div>
+                <div style="flex: 0 0 25%; width: 25%;">
+                    <small style="color: #64748b; font-weight: bold; font-size: 10px; display: block; margin-bottom: 2px;">PRICE</small>
+                    <span id="admin-display-price" style="font-weight: bold; font-size: 1.25rem; color: #10b981;">₹200</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let allBookings = [];
+        let manageModalInstance = null;
+        let editModalInstance = null;
+        
+        let currentManageBid = null;
+        let currentManageSeat = null;
+        let pendingNewSeatId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            manageModalInstance = new bootstrap.Modal(document.getElementById('manageModal'));
+            editModalInstance = new bootstrap.Modal(document.getElementById('editSeatModal'));
+        });
+
+        // Generates the WhatsApp pre-filled link
+        function getWALink(b) {
+            const rawMsg = `Hi ${b.name}! \n\nYour booking for *The Digital Frontier* is ${b.status}.\n\n *Ticket ID:* ${b.ticket_no}\n *Seat:* ${b.seat_id || 'N/A'}\n *Track here:* ${window.location.origin}/track\n\nThank you!`;
+            return `https://wa.me/${b.phone}?text=${encodeURIComponent(rawMsg)}`;
+        }
+
+        async function loadAdminData() {
+            try {
+                const response = await fetch('/admin/get-all');
+                if (response.status === 401) { window.location.href = '/admin/login'; return; }
+                allBookings = await response.json();
+                renderTable(allBookings);
+            } catch (err) {
+                document.getElementById('adminTableBody').innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4"><i class="fa-solid fa-triangle-exclamation me-2"></i>Failed to load data. Ensure server is running.</td></tr>`;
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+            
+            let revenue = 0, pendingCount = 0, seatCount = 0;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No bookings found yet.</td></tr>`;
+                updateStats(0, 0, 0, 0);
+                return;
+            }
+
+            data.forEach(b => {
+                if(b.status === 'CONFORMED') {
+                    revenue += parseInt(b.price || 0);
+                    if(b.seat_id) seatCount++;
+                }
+                if(b.status === 'PENDING') pendingCount++;
+
+                let proofHtml = '<span class="text-muted small">No Image</span>';
+                if (b.screenshot === 'WALK-IN') {
+                    proofHtml = '<span class="badge bg-secondary"><i class="fa-solid fa-user-check me-1"></i> Walk-in</span>';
+                } else if (b.screenshot) {
+                    proofHtml = `<img src="/static/uploads/${b.screenshot}" class="screenshot-thumb" onclick="previewImage('/static/uploads/${b.screenshot}')" alt="Proof" title="Click to enlarge">`;
+                }
+
+                const waButton = b.phone ? `<a href="${getWALink(b)}" target="_blank" class="text-success ms-2 text-decoration-none" title="Send WhatsApp Message"><i class="fa-brands fa-whatsapp fs-5 align-middle"></i></a>` : '';
+                
+                // Safe values for the download function
+                const safeName = (b.name || 'N/A').replace(/'/g, "\\'");
+                const safeSeat = (b.seat_id || 'N/A');
+                const safePrice = (b.price || 200);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="ps-4 fw-bold small">
+                        <a href="#" class="text-primary text-decoration-none hover-primary" 
+                           onclick="downloadAdminTicket('${b.ticket_no}', '${safeName}', '${safeSeat}', '${safePrice}', '${b.status}'); return false;" 
+                           title="Click to Download Image Ticket">
+                            <i class="fa-solid fa-download me-1"></i>${b.ticket_no}
+                        </a>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">${b.name || 'N/A'}</div>
+                        <div class="small text-muted d-flex align-items-center mt-1">
+                            ${b.phone || 'N/A'} ${waButton}
+                        </div>
+                    </td>
+                    <td><span class="badge border text-dark bg-light px-2 py-1">${b.seat_id || 'None'}</span></td>
+                    <td class="fw-bold">₹${b.price || 0}</td>
+                    <td>${proofHtml}</td>
+                    <td><span class="badge-status bg-${b.status}">${b.status}</span></td>
+                    <td class="text-end pe-4">
+                        ${b.status === 'PENDING' ? `
+                            <button class="btn btn-sm btn-success shadow-sm me-1" title="Approve Payment" onclick="updateStatus('${b.booking_id}', 'CONFORMED')">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger shadow-sm me-1" title="Reject/Cancel" onclick="updateStatus('${b.booking_id}', 'CANCELLED')">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        ` : `<span class="text-muted small fw-bold me-2"><i class="fa-solid fa-lock me-1"></i> Processed</span>`}
+                        
+                        <button class="btn btn-sm btn-dark shadow-sm" title="Manage Record" onclick="openManageModal('${b.booking_id}', '${b.seat_id || ''}')">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateStats(data.length, pendingCount, revenue, seatCount);
+        }
+
+        // --- NEW: Download Ticket Image as Admin ---
+        async function downloadAdminTicket(ticketNo, name, seat, price, status) {
+            // Populate the hidden template
+            document.getElementById('admin-display-tno').innerText = ticketNo;
+            document.getElementById('admin-display-name').innerText = name;
+            document.getElementById('admin-display-seat').innerText = seat;
+            document.getElementById('admin-display-price').innerText = `₹${price}`;
+            
+            const stamp = document.getElementById('admin-ticket-stamp');
+            stamp.innerText = status;
+            
+            // Set stamp colors matching the status
+            if (status === 'CONFORMED') {
+                stamp.style.borderColor = '#10b981';
+                stamp.style.color = '#10b981';
+            } else if (status === 'CANCELLED') {
+                stamp.style.borderColor = '#ef4444';
+                stamp.style.color = '#ef4444';
+            } else {
+                stamp.style.borderColor = '#f59e0b';
+                stamp.style.color = '#f59e0b';
+            }
+
+            const ticketEl = document.getElementById('admin-ticket-render-area');
+            
+            try {
+                // Generate and download the image instantly
+                const canvas = await html2canvas(ticketEl, { scale: 2, backgroundColor: "#ffffff", logging: false });
+                const link = document.createElement('a');
+                link.download = `${ticketNo}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (error) {
+                alert("Failed to generate the image ticket.");
+            }
+        }
+
+        function updateStats(total, pending, revenue, seats) {
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-revenue').textContent = `₹${revenue.toLocaleString()}`;
+            document.getElementById('stat-seats').textContent = `${seats} / 40`;
+        }
+
+        function previewImage(src) {
+            document.getElementById('modalImg').src = src;
+            new bootstrap.Modal(document.getElementById('imageModal')).show();
+        }
+
+        async function updateStatus(bid, status) {
+            if(!confirm(`Are you sure you want to mark this booking as ${status}?`)) return;
+            try {
+                const response = await fetch('/admin/update', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ bid: bid, status: status })
+                });
+                if(response.ok) loadAdminData();
+            } catch (err) { alert("Network error."); }
+        }
+
+        // --- MANAGE MODAL FUNCTIONS ---
+        function openManageModal(bid, seat) {
+            currentManageBid = bid;
+            currentManageSeat = seat;
+            manageModalInstance.show();
+        }
+
+        async function confirmDelete() {
+            if(!confirm("⚠️ WARNING: This will permanently delete the record and immediately release the seat. Continue?")) return;
+            
+            try {
+                const response = await fetch('/admin/delete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ bid: currentManageBid })
+                });
+                if(response.ok) {
+                    manageModalInstance.hide();
+                    loadAdminData();
+                } else {
+                    alert("Failed to delete record.");
+                }
+            } catch (err) { alert("Network error."); }
+        }
+
+        // --- VISUAL SEAT EDITING ---
+        function startVisualEdit() {
+            manageModalInstance.hide();
+            document.getElementById('newSeatDisplay').innerText = currentManageSeat || "--";
+            pendingNewSeatId = null;
+            document.getElementById('saveSeatBtn').disabled = true;
+            
+            editModalInstance.show();
+            renderEditSeatGrid(currentManageSeat);
+        }
+
+        async function renderEditSeatGrid(currentSeat) {
+            const grid = document.getElementById('editSeatGrid');
+            grid.innerHTML = '<div class="spinner-border text-primary py-3"></div>';
+
+            try {
+                const res = await fetch('/get-occupied-seats');
+                const data = await res.json();
+                const occupied = data.occupied_seats || [];
+                grid.innerHTML = ''; 
+
+                const rows = ['A', 'B', 'C', 'D'];
+                rows.forEach(rowLetter => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'seat-grid-row';
+                    
+                    for (let i = 1; i <= 10; i++) {
+                        const seatId = `${rowLetter}${i}`;
+                        const isTakenBySomeoneElse = occupied.includes(seatId) && seatId !== currentSeat;
+                        
+                        const seatEl = document.createElement('div');
+                        
+                        if (seatId === currentSeat) seatEl.className = 'seat current-seat';
+                        else if (isTakenBySomeoneElse) seatEl.className = 'seat unavailable';
+                        else seatEl.className = 'seat available';
+                        
+                        seatEl.innerText = seatId;
+
+                        if (!isTakenBySomeoneElse && seatId !== currentSeat) {
+                            seatEl.onclick = () => {
+                                if (seatEl.classList.contains('selected')) {
+                                    seatEl.classList.remove('selected');
+                                    pendingNewSeatId = null;
+                                    document.getElementById('newSeatDisplay').innerText = currentSeat || "--";
+                                    document.getElementById('saveSeatBtn').disabled = true;
+                                } else {
+                                    document.querySelectorAll('#editSeatGrid .seat.selected').forEach(s => s.classList.remove('selected'));
+                                    seatEl.classList.add('selected');
+                                    pendingNewSeatId = seatId;
+                                    document.getElementById('newSeatDisplay').innerText = seatId;
+                                    document.getElementById('saveSeatBtn').disabled = false;
+                                }
+                            };
+                        }
+                        rowDiv.appendChild(seatEl);
+                    }
+                    grid.appendChild(rowDiv);
+                });
+            } catch (err) {
+                grid.innerHTML = '<div class="text-danger small">Failed to load map.</div>';
+            }
+        }
+
+        async function submitSeatEdit() {
+            if (!pendingNewSeatId) return;
+            const btn = document.getElementById('saveSeatBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/admin/update-seat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ bid: currentManageBid, sid: pendingNewSeatId })
+                });
+                if (response.ok) {
+                    editModalInstance.hide();
+                    loadAdminData();
+                } else {
+                    alert("Error updating seat.");
+                }
+            } catch (err) { alert("Network error."); }
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+
+        function filterTable() {
+            const query = document.getElementById('adminSearch').value.toLowerCase();
+            const filteredData = allBookings.filter(b => 
+                (b.name && b.name.toLowerCase().includes(query)) || 
+                (b.ticket_no && b.ticket_no.toLowerCase().includes(query)) ||
+                (b.phone && b.phone.includes(query)) ||
+                (b.seat_id && b.seat_id.toLowerCase().includes(query))
+            );
+            renderTable(filteredData);
+        }
+
+        loadAdminData();
+        setInterval(loadAdminData, 15000); 
+    </script>
+</body>
+</html>

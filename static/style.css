@@ -1,0 +1,329 @@
+/* =========================================
+   static/style.css
+   AADU CINEMAS - LIGHT MODE THEME
+========================================= */
+
+/* --- 1. Root Variables & Global Theme --- */
+:root {
+    --primary: #4f46e5;         /* Indigo */
+    --primary-hover: #4338ca;
+    --primary-light: #eef2ff;
+    --success: #10b981;         /* Emerald Green for Selected/Confirmed */
+    --danger: #ef4444;          /* Red for Errors/Cancelled */
+    --warning: #f59e0b;         /* Amber for Pending */
+    
+    --bg-light: #f8fafc;        /* Main Website Background (Slate 50) */
+    --card-bg: #ffffff;         /* Pure White for Cards */
+    
+    --text-main: #1e293b;       /* Slate 800 for main text */
+    --text-muted: #64748b;      /* Slate 500 for secondary text */
+    --border-color: #e2e8f0;    /* Slate 200 for subtle borders */
+    
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* --- 2. Layout & Containers --- */
+.glass-panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+}
+
+/* --- 3. Form Elements & Buttons --- */
+.form-label {
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 8px;
+    padding: 12px 16px;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-light);
+    outline: none;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border: none;
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-primary:disabled {
+    background: #a5b4fc;
+    transform: none;
+    box-shadow: none;
+}
+
+/* --- 4. Booking Flow Stepper --- */
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: var(--border-color);
+    z-index: 0;
+}
+
+.step {
+    flex: 1;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+}
+
+.step i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: var(--bg-light);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    color: var(--primary);
+}
+
+.step.active i {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+
+/* --- 5. Cinema Seat Map --- */
+.seat-map-container {
+    padding: 30px;
+    background: #f1f5f9; /* Slightly darker than bg-light to stand out */
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.screen-area {
+    width: 70%;
+    height: 6px;
+    background: #cbd5e1;
+    margin: 0 auto 40px;
+    border-radius: 10px;
+    position: relative;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.screen-area::after {
+    content: 'SCREEN';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+}
+
+.seat-grid-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.seat {
+    width: 36px;
+    height: 36px;
+    margin: 0 4px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    user-select: none;
+}
+
+.seat.available {
+    background: #ffffff;
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+
+.seat.available:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.seat.selected {
+    background: var(--success) !important;
+    color: rgb(255, 255, 255) !important;
+    border-color: var(--success);
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+.seat.unavailable {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border: none;
+}
+
+/* --- 6. Digital Ticket Design --- */
+#ticket-render-area {
+    background: #ffffff;
+    color: var(--text-main);
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+    border-top: 8px solid var(--primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.status-stamp {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-15deg);
+    border: 3px solid var(--warning);
+    color: var(--warning);
+    padding: 8px 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+.status-stamp.confirmed {
+    border-color: var(--success);
+    color: var(--success);
+}
+
+/* --- 7. Admin Dashboard Specifics --- */
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.admin-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.admin-table thead th {
+    background: #f8fafc;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.screenshot-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.screenshot-thumb:hover {
+    transform: scale(1.15);
+    border-color: var(--primary);
+}
+
+.badge-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.bg-PENDING { background: #fef3c7; color: #92400e; }
+.bg-CONFORMED { background: #d1fae5; color: #065f46; }
+.bg-CANCELLED { background: #fee2e2; color: #991b1b; }
+
+/* --- 8. Responsiveness --- */
+@media (max-width: 768px) {
+    .seat { 
+        width: 28px; 
+        height: 28px; 
+        margin: 0 2px; 
+        font-size: 0.65rem; 
+    }
+    .glass-panel { padding: 1.5rem; }
+    .step-indicator::before { display: none; }
+}

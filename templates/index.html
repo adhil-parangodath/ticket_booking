@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AADU 3 CINEMAS | Official Booking</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-4 text-dark" href="/">
+                <i class="fa-solid fa-film text-primary me-2"></i>AADU 3 <span class="text-primary">CINEMAS</span>
+            </a>
+            <div class="ms-auto">
+                <a href="/track" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">
+                    <i class="fa-solid fa-magnifying-glass me-2"></i>Track Ticket
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row g-5">
+            
+            <div class="col-lg-4 mb-4 mb-lg-0" id="moviePosterCol">
+                <img src="/static/AADU_3.jpg" alt="Movie Poster" class="w-100 rounded-4 shadow-sm mb-4" style="object-fit: cover; aspect-ratio: 4/5; border: 2px solid #e2e8f0;">
+                <div class="bg-white p-4 rounded-4 shadow-sm border">
+                    <span class="badge bg-primary-light text-primary mb-2 px-3 py-2">Comedy / Thriller</span>
+                    <h2 class="fw-bold h4 mb-2">The Digital Frontier</h2>
+                    <p class="text-muted small mb-3">A breathtaking journey into the metaverse. Secure your seat for the premiere.</p>
+                    <div class="d-flex justify-content-between align-items-center bg-light border rounded-3 p-3">
+                        <span class="small fw-bold text-muted"><i class="fa-regular fa-calendar me-2"></i>Today</span>
+                        <span class="small fw-bold text-primary"><i class="fa-regular fa-clock me-2"></i>07:00 PM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="glass-panel">
+                    
+                    <div class="step-indicator">
+                        <div class="step active" id="step1-label"><i class="fa-solid fa-wallet"></i><span>Payment</span></div>
+                        <div class="step" id="step2-label"><i class="fa-solid fa-chair"></i><span>Seating</span></div>
+                        <div class="step" id="step3-label"><i class="fa-solid fa-check-double"></i><span>Ticket</span></div>
+                    </div>
+
+                    <h4 class="fw-bold mb-4" id="flowTitle">1. Verify Payment</h4>
+
+                    <div id="step-1-form">
+                        
+                        <div class="alert alert-warning border-0 mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="background-color: #fef3c7; color: #92400e;">
+                            <div class="small">
+                                <i class="fa-solid fa-circle-info me-2"></i>Please pay <strong>₹200</strong> via UPI, take a screenshot, and upload it below.
+                            </div>
+                            <button type="button" class="btn btn-dark fw-bold btn-sm shadow-sm px-3 text-nowrap" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                <i class="fa-solid fa-qrcode me-2"></i>Show UPI / QR
+                            </button>
+                        </div>
+                        
+                        <form id="paymentForm" enctype="multipart/form-data">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" name="name" class="form-control" placeholder="John Doe" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" name="phone" class="form-control" placeholder="9876543210" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required minlength="10">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Upload Screenshot</label>
+                                    <input type="file" name="screenshot" accept="image/png, image/jpeg, image/jpg" class="form-control" required>
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-3 fs-5 shadow-sm">
+                                        Upload & Pick Seat <i class="fa-solid fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="step-2-seats" style="display: none;">
+                        <div class="seat-map-container shadow-sm">
+                            <div class="screen-area"></div>
+                            <div id="seatGrid" class="mt-4"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-4 mt-4 flex-wrap small fw-bold text-muted">
+                            <div class="d-flex align-items-center"><div class="seat available me-2" style="width:16px;height:16px;margin:0;"></div> Available</div>
+                            <div class="d-flex align-items-center"><div class="seat selected me-2" style="width:16px;height:16px;margin:0;"></div> Selected</div>
+                            <div class="d-flex align-items-center"><div class="seat unavailable me-2" style="width:16px;height:16px;margin:0;"></div> Booked</div>
+                        </div>
+
+                        <button id="confirmSeatBtn" class="btn btn-success w-100 py-3 mt-4 fs-5 shadow" disabled>
+                            SELECT A SEAT TO CONTINUE
+                        </button>
+                    </div>
+
+                    <div id="step-3-ticket" style="display: none;">
+                        <div id="ticket-render-area" class="mx-auto" style="max-width: 450px; background: white;">
+                            <div class="status-stamp" id="ticket-stamp">PENDING</div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-primary px-3 py-2">AADU CINEMAS</span>
+                                <span class="fw-bold text-muted small" id="display-tno"></span>
+                            </div>
+                            
+                            <h3 class="fw-bold mb-1">The Digital Frontier</h3>
+                            <p class="text-muted small border-bottom pb-3">Hall 03 • Today • 07:00 PM</p>
+                            
+                            <div class="row g-3 mt-2">
+                                <div class="col-6">
+                                    <small class="text-muted fw-bold d-block" style="font-size: 10px;">GUEST NAME</small>
+                                    <span class="fw-bold fs-5 text-uppercase" id="display-name"></span>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted fw-bold d-block" style="font-size: 10px;">SEAT</small>
+                                    <span class="fw-bold fs-5 text-primary" id="display-seat"></span>
+                                </div>
+                                <div class="col-3">
+                                    <small class="text-muted fw-bold d-block" style="font-size: 10px;">PRICE</small>
+                                    <span class="fw-bold fs-5 text-success">₹200</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-5">
+                            <button class="btn btn-success px-4 py-2 fw-bold shadow-sm" onclick="downloadTicketImage()">
+                                <i class="fa-solid fa-image me-2"></i>Download as Image
+                            </button>
+                            <button class="btn btn-link d-block w-100 mt-3 text-muted text-decoration-none" onclick="location.reload()">
+                                Start New Booking
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg text-center">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h6 class="modal-title fw-bold w-100"><i class="fa-solid fa-indian-rupee-sign text-success me-2"></i>Secure UPI Payment</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-2">
+                    <p class="small text-muted mb-3">Amount to pay: <strong class="text-dark fs-5">₹200</strong></p>
+
+                    <div class="bg-light p-3 rounded-3 mb-3 d-none d-md-block border">
+                        <p class="small fw-bold mb-2">Scan with any UPI App</p>
+                        <img src="https://quickchart.io/qr?text=upi%3A%2F%2Fpay%3Fpa%3Dadhilp1024ad-1@hdfcbank%26pn%3DAADU%20Cinemas&size=200" alt="UPI QR Code" class="img-fluid rounded shadow-sm">
+                    </div>
+
+                    <div class="d-md-none mb-3">
+                        <a href="upi://pay?pa=adhilp1024ad-1@hdfcbank&pn=AADU%20Cinemas" class="btn btn-success w-100 py-3 fw-bold shadow-sm rounded-pill">
+                            <i class="fa-brands fa-google-pay me-1"></i> / <i class="fa-solid fa-building-columns ms-1 me-2"></i> Open UPI App
+                        </a>
+                        <p class="small text-muted mt-2 mb-0">Tap to pay directly via GPay, PhonePe, Paytm, etc.</p>
+                    </div>
+
+                    <div class="alert alert-info py-2 small mb-0 fw-bold border-0">
+                        <i class="fa-solid fa-camera me-1"></i> Don't forget to take a screenshot after paying!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionData = { booking_id: null, ticket_no: null, name: null, seat_id: null, price: 200 };
+
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/submit-payment', { method: 'POST', body: new FormData(this) });
+                const data = await response.json();
+
+                if (response.ok) {
+                    sessionData.booking_id = data.booking_id;
+                    sessionData.ticket_no = data.ticket_no;
+                    sessionData.name = data.name;
+
+                    document.getElementById('step-1-form').style.display = 'none';
+                    document.getElementById('step-2-seats').style.display = 'block';
+                    document.getElementById('step1-label').classList.remove('active');
+                    document.getElementById('step2-label').classList.add('active');
+                    document.getElementById('flowTitle').innerText = "2. Select Your Seat";
+
+                    buildSeatMap();
+                } else {
+                    alert("Upload Error: " + (data.error || "Please try again."));
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Connection failed.");
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }
+        });
+
+        async function buildSeatMap() {
+            const grid = document.getElementById('seatGrid');
+            grid.innerHTML = '<div class="text-center text-muted py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Loading map...</p></div>';
+
+            try {
+                const response = await fetch('/get-occupied-seats');
+                const data = await response.json();
+                const occupied = data.occupied_seats || [];
+                grid.innerHTML = ''; 
+
+                const rows = ['A', 'B', 'C', 'D'];
+                rows.forEach(rowLetter => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'seat-grid-row';
+                    
+                    for (let i = 1; i <= 10; i++) {
+                        const seatId = `${rowLetter}${i}`;
+                        const isTaken = occupied.includes(seatId);
+                        
+                        const seatEl = document.createElement('div');
+                        seatEl.className = `seat ${isTaken ? 'unavailable' : 'available'}`;
+                        seatEl.innerText = seatId;
+
+                        if (!isTaken) {
+                            seatEl.onclick = () => {
+                                const cBtn = document.getElementById('confirmSeatBtn');
+                                
+                                if (seatEl.classList.contains('selected')) {
+                                    seatEl.classList.remove('selected');
+                                    sessionData.seat_id = null;
+                                    cBtn.disabled = true;
+                                    cBtn.innerText = 'SELECT A SEAT TO CONTINUE';
+                                } else {
+                                    document.querySelectorAll('.seat.selected').forEach(s => s.classList.remove('selected'));
+                                    seatEl.classList.add('selected');
+                                    sessionData.seat_id = seatId;
+                                    cBtn.disabled = false;
+                                    cBtn.innerText = `CONFIRM SEAT ${seatId}`;
+                                }
+                            };
+                        }
+                        rowDiv.appendChild(seatEl);
+                    }
+                    grid.appendChild(rowDiv);
+                });
+            } catch (err) {
+                grid.innerHTML = '<div class="alert alert-danger text-center">Failed to load seating map.</div>';
+            }
+        }
+
+        document.getElementById('confirmSeatBtn').addEventListener('click', async function() {
+            if (!sessionData.seat_id) return;
+            
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Confirming...';
+
+            try {
+                const response = await fetch('/select-seat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sessionData)
+                });
+
+                if (response.ok) {
+                    document.getElementById('step-2-seats').style.display = 'none';
+                    document.getElementById('step-3-ticket').style.display = 'block';
+                    document.getElementById('step2-label').classList.remove('active');
+                    document.getElementById('step3-label').classList.add('active');
+                    document.getElementById('flowTitle').innerText = "3. Booking Placed";
+
+                    document.getElementById('display-name').innerText = sessionData.name;
+                    document.getElementById('display-seat').innerText = sessionData.seat_id;
+                    document.getElementById('display-tno').innerText = sessionData.ticket_no;
+                } else {
+                    alert("Seat Reservation Failed: Seat might have just been taken by someone else.");
+                    this.disabled = false;
+                    this.innerText = 'SELECT A SEAT TO CONTINUE';
+                    sessionData.seat_id = null;
+                    buildSeatMap(); 
+                }
+            } catch (err) {
+                alert("Connection failed.");
+                this.disabled = false;
+                this.innerText = `CONFIRM SEAT ${sessionData.seat_id}`;
+            }
+        });
+
+        async function downloadTicketImage() {
+            const ticketEl = document.getElementById('ticket-render-area');
+            const canvas = await html2canvas(ticketEl, { scale: 2, backgroundColor: "#ffffff" });
+            const link = document.createElement('a');
+            link.download = `${sessionData.ticket_no}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

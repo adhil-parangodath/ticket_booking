@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Ticket | AADU CINEMAS</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm py-3 mb-5">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-4 text-dark" href="/">
+                <i class="fa-solid fa-film text-primary me-2"></i>AADU <span class="text-primary">CINEMAS</span>
+            </a>
+            <div class="ms-auto">
+                <a href="/" class="btn btn-outline-secondary btn-sm rounded-pill px-4 fw-bold">
+                    <i class="fa-solid fa-house me-2"></i>Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">Retrieve Your Ticket</h2>
+                    <p class="text-muted">Enter your unique AADU ID to check status or download your pass.</p>
+                </div>
+
+                <div class="glass-panel border-primary mb-4 shadow-sm">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-ticket text-muted"></i></span>
+                        <input type="text" id="trackInput" class="form-control border-start-0" placeholder="AADU-XXXXXX-XXXXX">
+                        <button class="btn btn-primary px-4 fw-bold" id="searchBtn" onclick="searchTicket()">Search</button>
+                    </div>
+                </div>
+
+                <div id="resultContainer" class="text-center"></div>
+
+                <div id="ticketWrapper" style="display: none;">
+                    <div id="ticket-render-area" class="mx-auto text-start mt-4" style="max-width: 450px; background: white;">
+                        <div class="status-stamp confirmed" id="ticket-stamp">CONFORMED</div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-primary px-3 py-2">AADU CINEMAS</span>
+                            <span class="fw-bold text-muted small" id="display-tno"></span>
+                        </div>
+                        
+                        <h3 class="fw-bold mb-1">The Digital Frontier</h3>
+                        <p class="text-muted small border-bottom pb-3">Hall 03 • Today • 07:00 PM</p>
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-6">
+                                <small class="text-muted fw-bold d-block" style="font-size: 10px;">GUEST NAME</small>
+                                <span class="fw-bold fs-5 text-uppercase" id="display-name"></span>
+                            </div>
+                            <div class="col-3">
+                                <small class="text-muted fw-bold d-block" style="font-size: 10px;">SEAT</small>
+                                <span class="fw-bold fs-5 text-primary" id="display-seat"></span>
+                            </div>
+                            <div class="col-3">
+                                <small class="text-muted fw-bold d-block" style="font-size: 10px;">PRICE</small>
+                                <span class="fw-bold fs-5 text-success" id="display-price">₹200</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success w-100 py-3 mt-4 fw-bold shadow-sm" onclick="downloadTicketImage()">
+                        <i class="fa-solid fa-image me-2"></i>Download Ticket as Image
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTicketNo = "";
+
+        async function searchTicket() {
+            const tno = document.getElementById('trackInput').value.trim();
+            if(!tno) return;
+            
+            const btn = document.getElementById('searchBtn');
+            const resBox = document.getElementById('resultContainer');
+            const ticketWrapper = document.getElementById('ticketWrapper');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            ticketWrapper.style.display = 'none';
+
+            try {
+                const response = await fetch(`/check-status/${tno}`);
+                const data = await response.json();
+
+                if (data.found) {
+                    currentTicketNo = tno;
+                    
+                    if (data.status === 'CONFORMED') {
+                        // Show the full ticket for download
+                        resBox.innerHTML = '<div class="alert alert-success fw-bold"><i class="fa-solid fa-check-circle me-2"></i>Ticket Verified!</div>';
+                        
+                        document.getElementById('display-tno').innerText = tno;
+                        document.getElementById('display-name').innerText = data.name;
+                        document.getElementById('display-seat').innerText = data.seat_id || "N/A";
+                        document.getElementById('display-price').innerText = `₹${data.price || 200}`;
+                        
+                        ticketWrapper.style.display = 'block';
+                    } 
+                    else if (data.status === 'PENDING') {
+                        resBox.innerHTML = `
+                            <div class="glass-panel border-warning">
+                                <i class="fa-solid fa-clock text-warning fa-3x mb-3"></i>
+                                <h4 class="fw-bold">Verification Pending</h4>
+                                <p class="text-muted mb-0">Hi ${data.name}, we are currently reviewing your payment screenshot. Check back soon!</p>
+                            </div>
+                        `;
+                    } 
+                    else {
+                        resBox.innerHTML = `
+                            <div class="glass-panel border-danger">
+                                <i class="fa-solid fa-circle-xmark text-danger fa-3x mb-3"></i>
+                                <h4 class="fw-bold text-danger">Booking Cancelled</h4>
+                                <p class="text-muted mb-0">This booking was rejected by the admin. Please contact support.</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    resBox.innerHTML = '<div class="alert alert-danger fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Ticket ID not found.</div>';
+                }
+            } catch (err) {
+                resBox.innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
+            }
+            
+            btn.innerHTML = 'Search';
+            btn.disabled = false;
+        }
+
+        async function downloadTicketImage() {
+            const ticketEl = document.getElementById('ticket-render-area');
+            const canvas = await html2canvas(ticketEl, { scale: 2, backgroundColor: "#ffffff" });
+            const link = document.createElement('a');
+            link.download = `${currentTicketNo}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
