@@ -12,16 +12,24 @@ app.secret_key = 'AADU_cinema_ultra_secure_2026'
 app.permanent_session_lifetime = timedelta(minutes=30)
 
 # --- FOLDER & DATABASE CONFIGURATION ---
-# This ensures paths work perfectly on both your laptop and the live server
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# We check if we are on Railway (which uses /app) or your Laptop
+if os.path.exists('/app'):
+    # This is for the live Railway server with your Volume
+    DATA_DIR = '/app/data'
+else:
+    # This is for your local laptop testing
+    DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
-DB_FILE = os.path.join(BASE_DIR, 'booking_data.db')
-EXCEL_FILE = os.path.join(BASE_DIR, 'orders.xlsx')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
+# Ensure the folders exist so the app doesn't crash
+UPLOAD_FOLDER = os.path.join(DATA_DIR, 'static', 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Final Paths
+DB_FILE = os.path.join(DATA_DIR, 'booking_data.db')
+EXCEL_FILE = os.path.join(DATA_DIR, 'orders.xlsx')
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 ADMIN_USER = "adhil"
 ADMIN_PASS = "Adhilp1024@ad"
@@ -322,3 +330,4 @@ if __name__ == "__main__":
     # This tells the app to use the port Railway provides
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
