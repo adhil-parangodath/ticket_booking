@@ -5,6 +5,12 @@ import pandas as pd
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
+from flask import send_from_directory
+
+@app.route('/static/uploads/<filename>')
+def uploaded_file(filename):
+    # This specifically looks inside your Volume for the image
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 app = Flask(__name__)
 app.secret_key = 'AADU_cinema_ultra_secure_2026'
@@ -330,4 +336,5 @@ if __name__ == "__main__":
     # This tells the app to use the port Railway provides
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
